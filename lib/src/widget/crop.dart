@@ -284,7 +284,7 @@ class _CropEditor extends StatefulWidget {
   _CropEditorState createState() => _CropEditorState();
 }
 
-class _CropEditorState extends State<_CropEditor> {
+class _CropEditorState extends State<_CropEditor> with WidgetsBindingObserver{
   /// controller for crop actions
   late CropController _cropController;
 
@@ -305,11 +305,12 @@ class _CropEditorState extends State<_CropEditor> {
   ImageFormat? _detectedFormat;
 
   double? _sizeCache;
+  bool isAppInForeground = true;
 
   @override
   void initState() {
     super.initState();
-
+    WidgetsBinding.instance.addObserver(this);
     // prepare for controller
     _cropController = widget.controller ?? CropController();
     _cropController.delegate = CropControllerDelegate()
@@ -336,7 +337,20 @@ class _CropEditorState extends State<_CropEditor> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    isAppInForeground = state == AppLifecycleState.resumed;
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
+    if(isAppInForeground == false) 
+     return;
     /// parse image with given parser and format detector
     _parseImageWith(
       parser: widget.imageParser,
